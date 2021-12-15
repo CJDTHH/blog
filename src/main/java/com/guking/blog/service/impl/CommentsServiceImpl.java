@@ -1,7 +1,9 @@
 package com.guking.blog.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.guking.blog.mapper.ArticleMapper;
 import com.guking.blog.mapper.CommentsMapper;
+import com.guking.blog.pojo.Article;
 import com.guking.blog.pojo.Comment;
 import com.guking.blog.pojo.SysUser;
 import com.guking.blog.service.CommentsService;
@@ -28,6 +30,9 @@ public class CommentsServiceImpl implements CommentsService {
 
     @Autowired
     private SysUserService sysUserService;
+
+    @Autowired
+    private ArticleMapper articleMapper;
 
 
 
@@ -70,6 +75,15 @@ public class CommentsServiceImpl implements CommentsService {
         Long toUserId = commentParam.getToUserId();
         comment.setToUid(toUserId == null ? 0 : toUserId);
         this.commentsMapper.insert(comment);
+
+        // 查询阅读数量
+        Article article = articleMapper.selectById(commentParam.getArticleId());
+        Article articleUpdate = new Article();
+        // 修改所需要修改的属性
+        articleUpdate.setCommentCounts(article.getCommentCounts() + 1);
+        LambdaQueryWrapper<Article> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Article::getId,commentParam.getArticleId());
+        articleMapper.update(articleUpdate,wrapper);
         return Result.success(comment);
     }
 
